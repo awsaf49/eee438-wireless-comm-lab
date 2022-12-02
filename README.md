@@ -1,1 +1,1 @@
-# eee438-wireless-comm-lab
+# EEE438: Wireless Communication Laboratory
