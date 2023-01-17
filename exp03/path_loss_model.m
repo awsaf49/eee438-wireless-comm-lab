@@ -8,19 +8,20 @@ d = 1:1:1000;
 Gt=1;
 Gr=1;
 lam = c/fc;
+d0 = 100;
 
 %% free-space
 num = Gt*Gr*(lam^2);
 den = (4*pi*d).^2;
-PL_fp = 10*log10(num./den);
+PL_fp = -10*log10(num./den);
 
 semilogx(d, PL_fp);
 grid on;
-xlabel('log(distance)'), ylabel('PL free space (dB)');
+xlabel('log(distance)'), ylabel('Path Loss (dB)');
+title('Free Space Model')
 
-%% log-distance
+%% long-distance
 n = [2, 3, 6];
-d0 = 100;
 
 for i = 1:length(n)
     num = Gt*Gr*(lam^2);
@@ -30,24 +31,24 @@ for i = 1:length(n)
 
     semilogx(d,PL_ld);
     grid on;
-    xlabel('log(distance)'), ylabel('PL log-distance(dB)');
+    xlabel('log(distance)'), ylabel('Path Loss (dB)');
+    title('Long-distance model')
     hold on;
 end
 
 legend('n=2', 'n=3', 'n=6');
 
-%% log-normal
+%% log-normal shadowing
 num = Gt*Gr*(lam^2);
 den = (4*pi*d0)^2;
 sigma= 3;
 n0=2;
-% shadow=lognrand(0,3);
 PL0_ln = 10*log10(num./den)+10*n0*log10(d/d0);
 PL_ln= PL0_ln + sigma*randn(size(d));
-% \lognrnd(0,3, size(d))
 semilogx(d, PL_ln);
 grid on;
-xlabel('log(distance)'), ylabel('PL log normal shadow(dB)');
+xlabel('log(distance)'), ylabel('Path Loss (dB)');
+title('Log-normal shadowing')
 
 %% rayleigh
 clc;
@@ -55,7 +56,7 @@ clear all;
 close all;
 N = 100000;
 level = 50;
-sigma = [1/sqrt(2), 1];
+sigma = [1/sqrt(2), 1, 1.5];
 a= randn(1,N);
 b= randn(1,N);
 figure(1)
@@ -64,28 +65,30 @@ for sd=1:length(sigma)
     rl = sigma(sd)*(sqrt(a.^2+b.^2));
     [PDF, x] = hist(rl, level);
     mx = max(PDF);
-    figure(1)
+    subplot(211)
     plot(x, PDF)
-    title('PDF');
+    title('Rayleigh Distribution (PDF)');
+    xlabel('x'); ylabel('Occurance')
     grid on; hold on;
     
-    figure(2)
+    subplot(212)
     plot(x, cumsum(PDF)/max(cumsum(PDF)))
-    title('CDF');
+    title('Rayleigh Distribution (CDF)');
+    xlabel('x'); ylabel('Normalized Occurance')
     grid on; hold on;
     
 end
-figure(1)
-legend('std=1/sqrt(2)', 'std=1');
-figure(2)
-legend('std=1/sqrt(2)', 'std=1');
+subplot(211)
+legend('std=1/sqrt(2)', 'std=1', 'std=1.5');
+subplot(212)
+legend('std=1/sqrt(2)', 'std=1', 'std=1.5');
 
 %% rician
 
 N = 100000;
 level = 30;
 sigma = 1/sqrt(2);
-K_dB = [-40, 15];
+K_dB = [-40, 15, 10];
 
 figure(3);
 
@@ -97,20 +100,24 @@ for ki = 1:length(K_dB)
     f = sigma*randn(1, N); 
     rc = sqrt(e.^2+f.^2);
     [PDF, x] = hist(rc, level);
-    figure(3);
+    subplot(211)
     plot(x, PDF);
+    title('Rician Distribution (PDF)');
+    xlabel('x'); ylabel('Occurance')
     grid on;
     hold on;
     
-    figure(4);
+    subplot(212)
     plot(x, cumsum(PDF)/max(cumsum(PDF)))
+    title('Rician Distribution (CDF)');
+    xlabel('x'); ylabel('Normalizeed Occurance')
     grid on;
     hold on;
 end
-figure(3);
-legend('k = -40 dB', 'k = 15 dB');
-figure(4);
-legend('k = -40 dB', 'k = 15 dB');
+subplot(211)
+legend('k = -40 dB', 'k = 15 dB', 'k = 5 dB');
+subplot(212)
+legend('k = -40 dB', 'k = 15 dB', 'k = 5 dB');
 
 %% Tx vs Rx Reyleigh
 clc;
@@ -126,12 +133,13 @@ sq_sig = [ones(1, 400), -1*ones(1, 400), ones(1, 400),ones(1, 400),-ones(1, 400)
 
 rcv_sig = rl_sq.*sq_sig;
 
-figure(5)
-plot(rcv_sig);
-hold on;
-plot(sq_sig);
-title('Reyleigh');
-
+subplot(211)
+plot(rcv_sig, 'LineWidth',1.3);
+hold on; grid on;
+plot(sq_sig, 'LineWidth',1.4);
+hold off;
+title('Reyleigh Distribution');
+xlabel('x'); ylabel('Amp.')
 legend('Tx', 'Rx');
 
 %% Tx vs Rx Rician
@@ -148,9 +156,12 @@ m = mean1 + sigma*randn(1, N);
 n = sigma*randn(1, N); 
 sq_sig = [ones(1, 400), -1*ones(1, 400), ones(1, 400),ones(1, 400),-ones(1, 400)];
 rcv_sig = sqrt(m.^2+n.^2).*sq_sig;
-figure(6)
-plot(rcv_sig);
-hold on;
-plot(sq_sig);
+
+subplot(212)
+plot(rcv_sig, 'LineWidth',1.3);
+hold on; grid on;
+plot(sq_sig, 'LineWidth',1.4);
+hold off; grid on;
+title('Rician Distribution');
+xlabel('x'); ylabel('Amp.')
 legend('Tx', 'Rx');
-title('Rician')
